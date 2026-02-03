@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rustup target list:*)",
+      "Bash(wasm-pack:*)",
+      "Bash(node --version:*)",
+      "Bash(rustc:*)",
+      "Bash(cargo --version:*)",
+      "Bash(curl:*)",
+      "Bash(sh -s -- -y)",
+      "Bash(source:*)",
+      "Bash(rustup target add:*)",
+      "Bash(cargo install:*)",
+      "Bash(brew install:*)",
+      "Bash(emcc:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run download-parsers:*)",
+      "WebSearch",
+      "Bash(npm run dev:*)",
+      "Bash(tree:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)"
+    ]
+  }
+}
