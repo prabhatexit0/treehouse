@@ -1,4 +1,4 @@
-.PHONY: all install dev build clean parsers backend frontend help
+.PHONY: all install dev build clean parsers help
 
 # Default target
 all: install parsers
@@ -32,34 +32,15 @@ lint:
 	cd ui && npm run lint
 
 ## Clean frontend build artifacts and dependencies
-clean-ui:
+clean:
 	rm -rf ui/node_modules ui/dist ui/public/parsers/*.wasm
-
-# ============================================================================
-# Backend (Rust/WASM)
-# ============================================================================
-
-## Build Rust WASM backend
-backend:
-	cd ast-engine && wasm-pack build --target web --release
-
-## Clean backend build artifacts
-clean-backend:
-	cd ast-engine && cargo clean
-
-## Run backend tests
-test-backend:
-	cd ast-engine && cargo test
 
 # ============================================================================
 # Combined Commands
 # ============================================================================
 
-## Full setup: install deps, download parsers, build backend
-setup: install parsers backend
-
-## Clean all build artifacts
-clean: clean-ui clean-backend
+## Full setup: install deps, download parsers
+setup: install parsers
 
 ## Rebuild everything from scratch
 rebuild: clean setup
@@ -83,16 +64,10 @@ help:
 	@echo "  make build       - Build for production"
 	@echo "  make preview     - Preview production build"
 	@echo "  make lint        - Run ESLint"
-	@echo "  make clean-ui    - Remove node_modules and build artifacts"
-	@echo ""
-	@echo "Backend:"
-	@echo "  make backend     - Build Rust WASM module"
-	@echo "  make test-backend - Run Rust tests"
-	@echo "  make clean-backend - Remove Rust build artifacts"
+	@echo "  make clean       - Remove node_modules and build artifacts"
 	@echo ""
 	@echo "Combined:"
-	@echo "  make setup       - Full setup (install + parsers + backend)"
-	@echo "  make clean       - Clean all artifacts"
+	@echo "  make setup       - Full setup (install + parsers)"
 	@echo "  make rebuild     - Clean and rebuild everything"
 	@echo "  make fresh       - Fresh install and start dev server"
 	@echo ""

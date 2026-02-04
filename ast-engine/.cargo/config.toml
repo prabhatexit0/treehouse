@@ -1,6 +1,0 @@
-[build]
-# Use emcc for C compilation when targeting WASM
-# This is needed for tree-sitter's C code
-
-[target.wasm32-unknown-unknown]
-rustflags = ["-C", "target-feature=+atomics,+bulk-memory,+mutable-globals"]
