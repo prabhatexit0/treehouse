@@ -34,7 +34,7 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
 
     // Close dropdown when clicking outside
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
+        const handleClickOutside = (event: MouseEvent | TouchEvent) => {
             if (
                 dropdownRef.current &&
                 !dropdownRef.current.contains(event.target as Node)
@@ -45,10 +45,12 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
 
         if (isOpen) {
             document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('touchstart', handleClickOutside);
         }
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('touchstart', handleClickOutside);
         };
     }, [isOpen]);
 
@@ -59,10 +61,10 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
 
     return (
         <div className="relative" ref={dropdownRef}>
-            {/* Trigger Button */}
+            {/* Trigger Button - larger touch target on mobile */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-white/10 border border-white/20 rounded hover:bg-white/15 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex items-center gap-2 px-3 py-2 md:py-1.5 text-sm bg-white/10 border border-white/20 rounded hover:bg-white/15 active:bg-white/20 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] md:min-h-0"
             >
                 {selectedLanguage && (
                     <>
@@ -71,34 +73,46 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
                     </>
                 )}
                 <ChevronDown
-                    className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''
-                        }`}
+                    className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
                 />
             </button>
 
             {/* Dropdown List */}
             {isOpen && (
-                <ul className="absolute right-0 mt-2 w-48 bg-[#1e1e1e] border border-white/20 rounded shadow-lg z-50 overflow-hidden">
-                    {LANGUAGES.map((lang) => {
-                        const Icon = lang.icon;
-                        const isSelected = lang.value === value;
+                <>
+                    {/* Mobile overlay backdrop */}
+                    <div
+                        className="md:hidden fixed inset-0 bg-black/50 z-40"
+                        onClick={() => setIsOpen(false)}
+                    />
 
-                        return (
-                            <li key={lang.value}>
-                                <button
-                                    onClick={() => handleSelect(lang.value)}
-                                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors ${isSelected
-                                            ? 'bg-blue-600/30 text-blue-300'
-                                            : 'text-gray-300 hover:bg-white/10'
+                    {/* Dropdown menu */}
+                    <ul className="absolute right-0 mt-2 w-56 md:w-48 bg-[#1e1e1e] border border-white/20 rounded-lg shadow-lg z-50 overflow-hidden max-h-[60vh] overflow-y-auto">
+                        {LANGUAGES.map((lang) => {
+                            const Icon = lang.icon;
+                            const isSelected = lang.value === value;
+
+                            return (
+                                <li key={lang.value}>
+                                    <button
+                                        onClick={() => handleSelect(lang.value)}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 md:py-2.5 text-sm text-left transition-colors min-h-[48px] md:min-h-0 ${
+                                            isSelected
+                                                ? 'bg-blue-600/30 text-blue-300'
+                                                : 'text-gray-300 hover:bg-white/10 active:bg-white/15'
                                         }`}
-                                >
-                                    <Icon className="w-4 h-4 flex-shrink-0" />
-                                    <span>{lang.label}</span>
-                                </button>
-                            </li>
-                        );
-                    })}
-                </ul>
+                                    >
+                                        <Icon className="w-5 h-5 md:w-4 md:h-4 flex-shrink-0" />
+                                        <span>{lang.label}</span>
+                                        {isSelected && (
+                                            <span className="ml-auto text-blue-400">✓</span>
+                                        )}
+                                    </button>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </>
             )}
         </div>
     );

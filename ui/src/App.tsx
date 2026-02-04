@@ -149,6 +149,25 @@ function getLanguageExtension(lang: string) {
   }
 }
 
+// Hook to detect mobile viewport
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
+}
+
+type ActivePanel = 'code' | 'ast';
+
 function App() {
   const [code, setCode] = useState(SAMPLE_CODE.json);
   const [language, setLanguage] = useState('json');
@@ -158,9 +177,11 @@ function App() {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [cursorNodePath, setCursorNodePath] = useState<string | null>(null);
   const [hoveredNodePath, setHoveredNodePath] = useState<string | null>(null);
+  const [activePanel, setActivePanel] = useState<ActivePanel>('code');
 
   const editorRef = useRef<ReactCodeMirrorRef>(null);
   const cursorDebounceRef = useRef<number | null>(null);
+  const isMobile = useIsMobile();
 
   // Memoize language extension to prevent unnecessary re-renders
   const languageExtension = useMemo(
@@ -361,6 +382,18 @@ function App() {
     }
   }, []);
 
+  // Handle touch on AST node (for mobile)
+  const handleNodeTouch = useCallback(
+    (path: string, hasChildren: boolean) => {
+      if (hasChildren) {
+        toggleNode(path);
+      }
+      // Also trigger highlight on touch
+      handleNodeHover(path);
+    },
+    [handleNodeHover]
+  );
+
   // Create cursor tracker extension
   const cursorTrackerExtension = useMemo(
     () => cursorPositionTracker(handleCursorChange),
@@ -398,7 +431,7 @@ function App() {
 
     // Build class names for the node row
     const rowClasses = [
-      'flex items-center gap-2 py-1 px-2 rounded cursor-pointer transition-colors',
+      'ast-node-row flex items-center gap-1 md:gap-2 py-2 md:py-1 px-2 rounded cursor-pointer transition-colors touch-active',
       depth === 0 ? 'bg-white/5' : '',
       isAtCursor ? 'ast-node-at-cursor' : '',
       isHovered ? 'ast-node-hovered' : '',
@@ -411,33 +444,33 @@ function App() {
       <div key={path} className="select-none">
         <div
           className={rowClasses}
-          style={{ paddingLeft: `${depth * 16 + 8}px` }}
-          onClick={() => hasChildren && toggleNode(path)}
-          onMouseEnter={() => handleNodeHover(path)}
-          onMouseLeave={handleNodeLeave}
+          style={{ paddingLeft: `${depth * (isMobile ? 12 : 16) + 8}px` }}
+          onClick={() => isMobile ? handleNodeTouch(path, hasChildren) : (hasChildren && toggleNode(path))}
+          onMouseEnter={() => !isMobile && handleNodeHover(path)}
+          onMouseLeave={() => !isMobile && handleNodeLeave()}
+          onTouchEnd={() => isMobile && setTimeout(handleNodeLeave, 1500)}
         >
           {/* Expand/collapse indicator */}
-          <span className="w-4 text-gray-500 flex-shrink-0">
+          <span className="ast-node-toggle w-6 md:w-4 text-gray-500 flex-shrink-0 flex items-center justify-center">
             {hasChildren ? (isExpanded ? '▼' : '▶') : '•'}
           </span>
 
           {/* Node kind with styling based on named/anonymous */}
           <span
-            className={`font-mono text-sm ${isNamed ? 'text-blue-400 font-semibold' : 'text-gray-500'
-              }`}
+            className={`font-mono text-xs md:text-sm ${isNamed ? 'text-blue-400 font-semibold' : 'text-gray-500'}`}
           >
             {node.kind}
           </span>
 
-          {/* Position info */}
-          <span className="text-xs text-gray-600 font-mono">
+          {/* Position info - hidden on mobile for space */}
+          <span className="hidden md:inline text-xs text-gray-600 font-mono">
             [{node.startPosition.row}:{node.startPosition.column} -{' '}
             {node.endPosition.row}:{node.endPosition.column}]
           </span>
 
           {/* Text content for leaf nodes */}
           {node.text && (
-            <span className="text-green-400 text-sm font-mono truncate max-w-xs">
+            <span className="text-green-400 text-xs md:text-sm font-mono truncate max-w-[120px] md:max-w-xs">
               "{node.text}"
             </span>
           )}
@@ -455,116 +488,198 @@ function App() {
     );
   };
 
+  // Mobile Tab Navigation
+  const MobileTabBar = () => (
+    <div className="md:hidden flex border-b border-white/10 bg-white/5">
+      <button
+        className={`mobile-tab flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+          activePanel === 'code'
+            ? 'active text-blue-400'
+            : 'text-gray-400'
+        }`}
+        onClick={() => setActivePanel('code')}
+      >
+        Source Code
+      </button>
+      <button
+        className={`mobile-tab flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+          activePanel === 'ast'
+            ? 'active text-blue-400'
+            : 'text-gray-400'
+        }`}
+        onClick={() => setActivePanel('ast')}
+      >
+        AST Tree
+      </button>
+    </div>
+  );
+
+  // Editor Panel Component
+  const EditorPanel = ({ className = '' }: { className?: string }) => (
+    <div className={`flex flex-col ${className}`}>
+      {/* Desktop header */}
+      <div className="hidden md:flex px-4 py-2 border-b border-white/10 bg-white/5 items-center justify-between h-[50px]">
+        <span className="text-sm font-medium text-gray-400">
+          Source Code
+        </span>
+        <LanguageSelector
+          value={language}
+          onChange={handleLanguageChange}
+        />
+      </div>
+      {/* Mobile header - just language selector */}
+      <div className="md:hidden px-3 py-2 border-b border-white/10 bg-white/5 flex items-center justify-between"
+           style={{ paddingTop: `max(8px, var(--safe-area-top))` }}>
+        <span className="text-xs text-gray-500">Language:</span>
+        <LanguageSelector
+          value={language}
+          onChange={handleLanguageChange}
+        />
+      </div>
+      <div className="flex-1 overflow-hidden">
+        <CodeMirror
+          ref={editorRef}
+          value={code}
+          height="100%"
+          theme={vscodeDark}
+          extensions={[
+            languageExtension,
+            highlightExtension(),
+            cursorTrackerExtension,
+          ]}
+          onChange={handleCodeChange}
+          basicSetup={{
+            lineNumbers: true,
+            highlightActiveLineGutter: true,
+            highlightActiveLine: true,
+            foldGutter: !isMobile,
+            dropCursor: true,
+            allowMultipleSelections: !isMobile,
+            indentOnInput: true,
+            bracketMatching: true,
+            closeBrackets: true,
+            autocompletion: !isMobile,
+            rectangularSelection: !isMobile,
+            crosshairCursor: false,
+            highlightSelectionMatches: true,
+          }}
+          style={{ height: '100%', fontSize: isMobile ? '14px' : '14px' }}
+        />
+      </div>
+    </div>
+  );
+
+  // AST Panel Component
+  const AstPanel = ({ className = '' }: { className?: string }) => (
+    <div className={`flex flex-col ${className}`}>
+      {/* Desktop header */}
+      <div className="hidden md:flex px-4 py-2 border-b border-white/10 bg-white/5 items-center justify-between h-[50px]">
+        <span className="text-sm font-medium text-gray-400">
+          Abstract Syntax Tree
+        </span>
+        {parseResult?.ast && (
+          <div className="flex gap-2">
+            <button
+              onClick={expandAll}
+              className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              Expand All
+            </button>
+            <button
+              onClick={collapseAll}
+              className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              Collapse All
+            </button>
+          </div>
+        )}
+      </div>
+      {/* Mobile header */}
+      <div className="md:hidden px-3 py-2 border-b border-white/10 bg-white/5 flex items-center justify-between"
+           style={{ paddingTop: `max(8px, var(--safe-area-top))` }}>
+        {parseResult?.ast && (
+          <div className="flex gap-2 w-full">
+            <button
+              onClick={expandAll}
+              className="flex-1 text-xs px-3 py-2 rounded bg-white/10 active:bg-white/20 transition-colors min-h-[36px]"
+            >
+              Expand All
+            </button>
+            <button
+              onClick={collapseAll}
+              className="flex-1 text-xs px-3 py-2 rounded bg-white/10 active:bg-white/20 transition-colors min-h-[36px]"
+            >
+              Collapse All
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-auto p-3 md:p-4 hide-scrollbar ast-tree">
+        {isLoading && (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-gray-400">Loading Tree-sitter...</div>
+          </div>
+        )}
+
+        {initError && (
+          <div className="bg-red-500/20 border border-red-500/50 rounded p-4 text-red-300">
+            <p className="font-semibold mb-2">Initialization Error</p>
+            <p className="text-sm">{initError}</p>
+          </div>
+        )}
+
+        {!isLoading && !initError && parseResult && (
+          <>
+            {parseResult.success && parseResult.ast ? (
+              <div className="font-mono text-sm">
+                {renderAstNode(parseResult.ast, 'root')}
+              </div>
+            ) : (
+              <div className="bg-red-500/20 border border-red-500/50 rounded p-4 text-red-300">
+                <p className="font-semibold">Parse Error</p>
+                <p className="text-sm mt-1">{parseResult.error}</p>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="h-full flex flex-col bg-[#0f0f0f] text-white">
+      {/* Mobile Tab Bar */}
+      <MobileTabBar />
+
       {/* Main content */}
       <div className="flex-1 flex min-h-0">
-        {/* Editor Panel */}
-        <div className="w-1/2 flex flex-col border-r border-white/10">
-          <div className="px-4 py-2 border-b border-white/10 bg-white/5 flex items-center justify-between h-[50px]">
-            <span className="text-sm font-medium text-gray-400">
-              Source Code
-            </span>
-            <LanguageSelector
-              value={language}
-              onChange={handleLanguageChange}
-            />
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <CodeMirror
-              ref={editorRef}
-              value={code}
-              height="100%"
-              theme={vscodeDark}
-              extensions={[
-                languageExtension,
-                highlightExtension(),
-                cursorTrackerExtension,
-              ]}
-              onChange={handleCodeChange}
-              basicSetup={{
-                lineNumbers: true,
-                highlightActiveLineGutter: true,
-                highlightActiveLine: true,
-                foldGutter: true,
-                dropCursor: true,
-                allowMultipleSelections: true,
-                indentOnInput: true,
-                bracketMatching: true,
-                closeBrackets: true,
-                autocompletion: true,
-                rectangularSelection: true,
-                crosshairCursor: false,
-                highlightSelectionMatches: true,
-              }}
-              style={{ height: '100%', fontSize: '14px' }}
-            />
-          </div>
+        {/* Desktop: Side-by-side layout */}
+        <div className="hidden md:flex flex-1">
+          <EditorPanel className="w-1/2 border-r border-white/10" />
+          <AstPanel className="w-1/2" />
         </div>
 
-        {/* AST Panel */}
-        <div className="w-1/2 flex flex-col">
-          <div className="px-4 py-2 border-b border-white/10 bg-white/5 flex items-center justify-between h-[50px]">
-            <span className="text-sm font-medium text-gray-400">
-              Abstract Syntax Tree
-            </span>
-            {parseResult?.ast && (
-              <div className="flex gap-2">
-                <button
-                  onClick={expandAll}
-                  className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
-                >
-                  Expand All
-                </button>
-                <button
-                  onClick={collapseAll}
-                  className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
-                >
-                  Collapse All
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="flex-1 overflow-auto p-4">
-            {isLoading && (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-gray-400">Loading Tree-sitter...</div>
-              </div>
-            )}
-
-            {initError && (
-              <div className="bg-red-500/20 border border-red-500/50 rounded p-4 text-red-300">
-                <p className="font-semibold mb-2">Initialization Error</p>
-                <p className="text-sm">{initError}</p>
-              </div>
-            )}
-
-            {!isLoading && !initError && parseResult && (
-              <>
-                {parseResult.success && parseResult.ast ? (
-                  <div className="font-mono text-sm">
-                    {renderAstNode(parseResult.ast, 'root')}
-                  </div>
-                ) : (
-                  <div className="bg-red-500/20 border border-red-500/50 rounded p-4 text-red-300">
-                    <p className="font-semibold">Parse Error</p>
-                    <p className="text-sm mt-1">{parseResult.error}</p>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+        {/* Mobile: Tab-based layout */}
+        <div className="md:hidden flex-1 flex">
+          {activePanel === 'code' && (
+            <EditorPanel className="flex-1" />
+          )}
+          {activePanel === 'ast' && (
+            <AstPanel className="flex-1" />
+          )}
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="px-6 py-2 border-t border-white/10 text-xs text-gray-500 flex justify-between">
-        <span>Powered by Tree-sitter WASM</span>
+      <footer
+        className="px-4 md:px-6 py-2 border-t border-white/10 text-xs text-gray-500 flex justify-between"
+        style={{ paddingBottom: `max(8px, var(--safe-area-bottom))` }}
+      >
+        <span className="truncate">Tree-sitter WASM</span>
         {parseResult?.ast && (
-          <span>
-            Nodes: {countNodes(parseResult.ast)} | Language:{' '}
-            {parseResult.language}
+          <span className="truncate ml-2">
+            {countNodes(parseResult.ast)} nodes | {parseResult.language}
           </span>
         )}
       </footer>

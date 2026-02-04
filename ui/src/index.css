@@ -13,17 +13,27 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Safe area insets for iPhone notch/Dynamic Island */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
+  overscroll-behavior: none; /* Prevent pull-to-refresh */
 }
 
 #root {
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile */
   width: 100vw;
+  overflow: hidden;
 }
 
 /* CodeMirror AST highlight decoration */
@@ -41,4 +51,77 @@ body {
 /* Tree node hover state */
 .ast-node-hovered {
   background-color: rgba(250, 204, 21, 0.15);
+}
+
+/* Mobile tab styles */
+.mobile-tab {
+  min-height: 44px; /* iOS minimum touch target */
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-tab.active {
+  border-bottom: 2px solid #3b82f6;
+}
+
+/* AST node touch-friendly styles for mobile */
+@media (max-width: 768px) {
+  .ast-node-row {
+    min-height: 44px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  /* Larger touch targets for expand/collapse */
+  .ast-node-toggle {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Prevent text selection on touch */
+  .ast-tree {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+/* CodeMirror mobile adjustments */
+@media (max-width: 768px) {
+  .cm-editor {
+    font-size: 14px !important;
+  }
+
+  .cm-editor .cm-content {
+    padding: 8px 4px;
+  }
+
+  .cm-editor .cm-gutters {
+    padding-left: var(--safe-area-left);
+  }
+}
+
+/* Hide scrollbar on mobile but keep functionality */
+@media (max-width: 768px) {
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Smooth transitions for panel switching */
+.panel-transition {
+  transition: opacity 150ms ease-in-out;
+}
+
+/* Active touch state for better feedback */
+@media (hover: none) {
+  .touch-active:active {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
 }
