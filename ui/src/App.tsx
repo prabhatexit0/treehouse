@@ -7,6 +7,13 @@ import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
 import { go } from '@codemirror/lang-go';
 import { StreamLanguage } from '@codemirror/language';
+import {
+  ChevronRight,
+  ChevronDown,
+  UnfoldVertical,
+  FoldVertical,
+  Minus,
+} from 'lucide-react';
 import { parser, type AstNode, type ParseResult } from './lib/parser';
 import { LanguageSelector } from './components/LanguageSelector';
 import { BottomSheet, type SnapPoint } from './components/BottomSheet';
@@ -420,11 +427,10 @@ function App() {
 
     // Build class names for the node row
     const rowClasses = [
-      'ast-node-row flex items-center gap-1 md:gap-2 py-2 md:py-1 px-2 rounded cursor-pointer transition-colors touch-active',
-      depth === 0 ? 'bg-white/5' : '',
+      'ast-node-row flex items-center gap-1 md:gap-1.5 py-1.5 md:py-0.5 px-1 cursor-pointer transition-colors touch-active',
       isAtCursor ? 'ast-node-at-cursor' : '',
       isHovered ? 'ast-node-hovered' : '',
-      !isAtCursor && !isHovered ? 'hover:bg-white/10' : '',
+      !isAtCursor && !isHovered ? 'hover:bg-white/[0.06]' : '',
     ]
       .filter(Boolean)
       .join(' ');
@@ -447,8 +453,16 @@ function App() {
           }}
         >
           {/* Expand/collapse indicator */}
-          <span className="ast-node-toggle w-6 md:w-4 text-gray-500 flex-shrink-0 flex items-center justify-center">
-            {hasChildren ? (isExpanded ? '▼' : '▶') : '•'}
+          <span className="ast-node-toggle w-5 md:w-4 text-gray-500 flex-shrink-0 flex items-center justify-center">
+            {hasChildren ? (
+              isExpanded ? (
+                <ChevronDown className="w-3.5 h-3.5 md:w-3 md:h-3" />
+              ) : (
+                <ChevronRight className="w-3.5 h-3.5 md:w-3 md:h-3" />
+              )
+            ) : (
+              <Minus className="w-2.5 h-2.5 md:w-2 md:h-2 opacity-30" />
+            )}
           </span>
 
           {/* Node kind with styling based on named/anonymous */}
@@ -528,13 +542,13 @@ function App() {
   // ============================================
   if (isMobile) {
     return (
-      <div className="h-full flex flex-col bg-[#0f0f0f] text-white">
+      <div className="h-full flex flex-col bg-[#1e1e1e] text-white">
         {/* Mobile header: language selector */}
         <div
-          className="mobile-header flex items-center justify-between px-3 py-2 border-b border-white/10 bg-[#161616]"
+          className="mobile-header flex items-center justify-between px-3 py-2 border-b border-white/8 bg-[#252526]"
           style={{ paddingTop: `max(8px, var(--safe-area-top))` }}
         >
-          <span className="text-sm font-medium text-gray-300 truncate">TreeHouse</span>
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">TreeHouse</span>
           <LanguageSelector value={language} onChange={handleLanguageChange} isMobile />
         </div>
 
@@ -575,11 +589,11 @@ function App() {
           snap={astSnap}
           onSnapChange={setAstSnap}
           header={
-            <div className="flex items-center justify-between w-full px-4">
-              <span className="text-sm font-medium text-gray-300">
-                AST Tree
+            <div className="flex items-center justify-between w-full px-3">
+              <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                AST
                 {parseResult?.ast && (
-                  <span className="text-xs text-gray-500 ml-2">
+                  <span className="text-gray-600 ml-2 normal-case tracking-normal">
                     {countNodes(parseResult.ast)} nodes
                   </span>
                 )}
@@ -587,15 +601,20 @@ function App() {
               {parseResult?.ast && (
                 <button
                   onClick={toggleExpandCollapseAll}
-                  className="text-xs px-2 py-1 rounded bg-white/10 active:bg-white/20 transition-colors"
+                  className="flex items-center justify-center w-7 h-7 rounded text-gray-500 active:bg-white/10 transition-colors"
+                  aria-label={isAllExpanded ? 'Collapse all' : 'Expand all'}
                 >
-                  {isAllExpanded ? 'Collapse' : 'Expand'}
+                  {isAllExpanded ? (
+                    <FoldVertical className="w-3.5 h-3.5" />
+                  ) : (
+                    <UnfoldVertical className="w-3.5 h-3.5" />
+                  )}
                 </button>
               )}
             </div>
           }
         >
-          <div className="flex-1 overflow-auto p-3 hide-scrollbar ast-tree">
+          <div className="flex-1 overflow-auto px-1 py-1 hide-scrollbar ast-tree">
             {renderAstContent()}
           </div>
         </BottomSheet>
@@ -607,14 +626,14 @@ function App() {
   // Desktop Layout
   // ============================================
   return (
-    <div className="h-full flex flex-col bg-[#0f0f0f] text-white">
+    <div className="h-full flex flex-col bg-[#1e1e1e] text-white">
       {/* Main content */}
       <div className="flex-1 flex min-h-0">
         {/* Editor Panel */}
-        <div className="flex flex-col border-r border-white/10 md:w-1/2">
+        <div className="flex flex-col border-r border-[#333] md:w-1/2">
           {/* Desktop header */}
-          <div className="flex px-4 py-2 border-b border-white/10 bg-white/5 items-center justify-between h-[50px]">
-            <span className="text-sm font-medium text-gray-400">Source Code</span>
+          <div className="flex px-4 py-2 border-b border-[#333] bg-[#252526] items-center justify-between h-[36px]">
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Source Code</span>
             <LanguageSelector value={language} onChange={handleLanguageChange} />
           </div>
           <div className="flex-1 overflow-hidden">
@@ -650,34 +669,52 @@ function App() {
         </div>
 
         {/* AST Panel */}
-        <div className="flex flex-col md:w-1/2">
+        <div className="flex flex-col md:w-1/2 bg-[#1e1e1e]">
           {/* Desktop header */}
-          <div className="flex px-4 py-2 border-b border-white/10 bg-white/5 items-center justify-between h-[50px]">
-            <span className="text-sm font-medium text-gray-400">Abstract Syntax Tree</span>
+          <div className="flex px-4 py-2 border-b border-[#333] bg-[#252526] items-center justify-between h-[36px]">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">AST</span>
+              {parseResult?.ast && (
+                <span className="text-xs text-gray-600">
+                  {countNodes(parseResult.ast)} nodes
+                </span>
+              )}
+            </div>
             {parseResult?.ast && (
               <button
                 onClick={toggleExpandCollapseAll}
-                className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
+                className="flex items-center gap-1.5 text-xs px-1.5 py-1 rounded hover:bg-white/10 transition-colors text-gray-500 hover:text-gray-400"
+                aria-label={isAllExpanded ? 'Collapse all nodes' : 'Expand all nodes'}
               >
-                {isAllExpanded ? 'Collapse All' : 'Expand All'}
+                {isAllExpanded ? (
+                  <>
+                    <FoldVertical className="w-3.5 h-3.5" />
+                    <span>Collapse</span>
+                  </>
+                ) : (
+                  <>
+                    <UnfoldVertical className="w-3.5 h-3.5" />
+                    <span>Expand</span>
+                  </>
+                )}
               </button>
             )}
           </div>
-          <div className="flex-1 overflow-auto p-3 md:p-4 hide-scrollbar ast-tree">
+          <div className="flex-1 overflow-auto px-2 py-1 ast-tree">
             {renderAstContent()}
           </div>
         </div>
       </div>
 
-      {/* Footer */}
+      {/* Footer - VSCode-like status bar */}
       <footer
-        className="px-4 md:px-6 py-2 border-t border-white/10 text-xs text-gray-500 flex justify-between"
-        style={{ paddingBottom: `max(8px, var(--safe-area-bottom))` }}
+        className="px-4 py-1 border-t border-[#333] bg-[#007acc] text-xs text-white/90 flex justify-between items-center h-[22px]"
+        style={{ paddingBottom: `max(4px, var(--safe-area-bottom))` }}
       >
         <span className="truncate">Tree-sitter WASM</span>
         {parseResult?.ast && (
           <span className="truncate ml-2">
-            {countNodes(parseResult.ast)} nodes | {parseResult.language}
+            {countNodes(parseResult.ast)} nodes &middot; {parseResult.language}
           </span>
         )}
       </footer>
