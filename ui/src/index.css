@@ -7,7 +7,7 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #0f0f0f;
+  background-color: #1e1e1e;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -44,13 +44,13 @@ body {
 
 /* Tree node at cursor position */
 .ast-node-at-cursor {
-  background-color: rgba(59, 130, 246, 0.2);
-  border-left: 2px solid rgba(59, 130, 246, 0.8);
+  background-color: rgba(59, 130, 246, 0.12);
+  border-left: 2px solid rgba(59, 130, 246, 0.7);
 }
 
 /* Tree node hover state */
 .ast-node-hovered {
-  background-color: rgba(250, 204, 21, 0.15);
+  background-color: rgba(250, 204, 21, 0.1);
 }
 
 /* Mobile tab styles */
@@ -66,15 +66,15 @@ body {
 /* AST node touch-friendly styles for mobile */
 @media (max-width: 768px) {
   .ast-node-row {
-    min-height: 44px;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    min-height: 36px;
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
 
   /* Larger touch targets for expand/collapse */
   .ast-node-toggle {
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -136,14 +136,14 @@ body {
   left: 0;
   right: 0;
   z-index: 30;
-  background-color: #1a1a1a;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px 16px 0 0;
+  background-color: #1e1e1e;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0;
   display: flex;
   flex-direction: column;
   max-height: 92vh;
   max-height: 92dvh;
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.4);
   /* Prevent content from leaking below safe area */
   padding-bottom: var(--safe-area-bottom);
   touch-action: none;
@@ -154,9 +154,10 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px 0 8px;
+  padding: 6px 0 4px;
   cursor: grab;
   -webkit-tap-highlight-color: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .bottom-sheet-handle:active {
@@ -164,11 +165,11 @@ body {
 }
 
 .bottom-sheet-handle-bar {
-  width: 36px;
-  height: 4px;
-  border-radius: 2px;
-  background-color: rgba(255, 255, 255, 0.25);
-  margin-bottom: 8px;
+  width: 32px;
+  height: 3px;
+  border-radius: 1.5px;
+  background-color: rgba(255, 255, 255, 0.2);
+  margin-bottom: 6px;
 }
 
 .bottom-sheet-content {
@@ -197,8 +198,9 @@ body {
   width: 100%;
   max-height: 70vh;
   max-height: 70dvh;
-  background-color: #1e1e1e;
-  border-radius: 16px 16px 0 0;
+  background-color: #252526;
+  border-radius: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
   overflow-y: auto;
   padding-bottom: var(--safe-area-bottom);
   animation: slideUp 0.25s cubic-bezier(0.25, 1, 0.5, 1);
