@@ -174,6 +174,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [isAllExpanded, setIsAllExpanded] = useState(false);
   const [cursorNodePath, setCursorNodePath] = useState<string | null>(null);
   const [hoveredNodePath, setHoveredNodePath] = useState<string | null>(null);
   const [astSnap, setAstSnap] = useState<SnapPoint>('collapsed');
@@ -387,25 +388,26 @@ function App() {
     [handleCursorChange]
   );
 
-  // Expand all nodes
-  const expandAll = () => {
-    if (!parseResult?.ast) return;
-    const allPaths = new Set<string>();
+  // Toggle expand/collapse all nodes
+  const toggleExpandCollapseAll = () => {
+    if (isAllExpanded) {
+      setExpandedNodes(new Set(['root']));
+      setIsAllExpanded(false);
+    } else {
+      if (!parseResult?.ast) return;
+      const allPaths = new Set<string>();
 
-    const collectPaths = (node: AstNode, path: string) => {
-      allPaths.add(path);
-      node.children.forEach((child, i) => {
-        collectPaths(child, `${path}-${i}`);
-      });
-    };
+      const collectPaths = (node: AstNode, path: string) => {
+        allPaths.add(path);
+        node.children.forEach((child, i) => {
+          collectPaths(child, `${path}-${i}`);
+        });
+      };
 
-    collectPaths(parseResult.ast, 'root');
-    setExpandedNodes(allPaths);
-  };
-
-  // Collapse all nodes
-  const collapseAll = () => {
-    setExpandedNodes(new Set(['root']));
+      collectPaths(parseResult.ast, 'root');
+      setExpandedNodes(allPaths);
+      setIsAllExpanded(true);
+    }
   };
 
   // Render AST node recursively
@@ -583,20 +585,12 @@ function App() {
                 )}
               </span>
               {parseResult?.ast && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={expandAll}
-                    className="text-xs px-2 py-1 rounded bg-white/10 active:bg-white/20 transition-colors"
-                  >
-                    Expand
-                  </button>
-                  <button
-                    onClick={collapseAll}
-                    className="text-xs px-2 py-1 rounded bg-white/10 active:bg-white/20 transition-colors"
-                  >
-                    Collapse
-                  </button>
-                </div>
+                <button
+                  onClick={toggleExpandCollapseAll}
+                  className="text-xs px-2 py-1 rounded bg-white/10 active:bg-white/20 transition-colors"
+                >
+                  {isAllExpanded ? 'Collapse' : 'Expand'}
+                </button>
               )}
             </div>
           }
@@ -661,20 +655,12 @@ function App() {
           <div className="flex px-4 py-2 border-b border-white/10 bg-white/5 items-center justify-between h-[50px]">
             <span className="text-sm font-medium text-gray-400">Abstract Syntax Tree</span>
             {parseResult?.ast && (
-              <div className="flex gap-2">
-                <button
-                  onClick={expandAll}
-                  className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
-                >
-                  Expand All
-                </button>
-                <button
-                  onClick={collapseAll}
-                  className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
-                >
-                  Collapse All
-                </button>
-              </div>
+              <button
+                onClick={toggleExpandCollapseAll}
+                className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
+              >
+                {isAllExpanded ? 'Collapse All' : 'Expand All'}
+              </button>
             )}
           </div>
           <div className="flex-1 overflow-auto p-3 md:p-4 hide-scrollbar ast-tree">
