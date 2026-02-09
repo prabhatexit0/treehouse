@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, X } from 'lucide-react';
 import {
     FileJson,
@@ -79,7 +80,7 @@ export function LanguageSelector({ value, onChange, isMobile }: LanguageSelector
                     <ChevronDown className="w-3 h-3 text-gray-400" />
                 </button>
 
-                {isOpen && (
+                {isOpen && createPortal(
                     <div className="lang-sheet-overlay" onClick={() => setIsOpen(false)}>
                         <div
                             className="lang-sheet"
@@ -128,7 +129,8 @@ export function LanguageSelector({ value, onChange, isMobile }: LanguageSelector
                                 })}
                             </ul>
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 )}
             </>
         );
