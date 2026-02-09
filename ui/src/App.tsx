@@ -603,7 +603,7 @@ function App() {
       <div className="h-full flex flex-col bg-[#1e1e1e] text-white">
         {/* Mobile header */}
         <div
-          className="mobile-header flex items-center justify-between px-4 py-2.5 border-b border-white/[0.06] bg-[#1e1e1e]/80 backdrop-blur-xl"
+          className="mobile-header relative z-50 flex items-center justify-between px-4 py-2.5 border-b border-white/[0.06] bg-[#1e1e1e]/80 backdrop-blur-xl"
           style={{ paddingTop: `max(10px, var(--safe-area-top))` }}
         >
           <span className="text-sm font-semibold text-white/90 tracking-tight">spectree</span>
