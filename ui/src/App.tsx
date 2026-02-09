@@ -362,10 +362,27 @@ function App() {
         if (nodePath && nodePath !== cursorNodePath) {
           setCursorNodePath(nodePath);
           expandPathToNode(nodePath);
+
+          // In explorer mode, highlight the matched node's range in the editor
+          if (editorMode === 'explorer') {
+            if (editorRef.current?.view) {
+              const node = getNodeByPath(parseResult.ast, nodePath);
+              if (node) {
+                setHighlight(editorRef.current.view, {
+                  from: node.start,
+                  to: node.end,
+                });
+              }
+            }
+            // On mobile, auto-open the bottom sheet so the AST node is visible
+            if (isMobile && astSnap === 'collapsed') {
+              setAstSnap('half');
+            }
+          }
         }
       }, 50);
     },
-    [parseResult?.ast, cursorNodePath, findNodeAtPosition, expandPathToNode]
+    [parseResult?.ast, cursorNodePath, findNodeAtPosition, expandPathToNode, editorMode, getNodeByPath, isMobile, astSnap]
   );
 
   // ============================================
@@ -395,6 +412,21 @@ function App() {
       setHighlight(editorRef.current.view, null);
     }
   }, []);
+
+  // Auto-scroll AST tree to the node at cursor
+  useEffect(() => {
+    if (!cursorNodePath) return;
+
+    // Small delay to let the DOM update after expandPathToNode
+    const timer = window.setTimeout(() => {
+      const el = document.querySelector(`[data-ast-path="${cursorNodePath}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, 60);
+
+    return () => window.clearTimeout(timer);
+  }, [cursorNodePath]);
 
   // Create cursor tracker extension
   const cursorTrackerExtension = useMemo(
@@ -464,6 +496,7 @@ function App() {
       <div key={path} className="select-none">
         <div
           className={rowClasses}
+          data-ast-path={path}
           style={{ paddingLeft: `${depth * (isMobile ? 12 : 16) + 8}px` }}
           onClick={() => {
             if (hasChildren) toggleNode(path);
