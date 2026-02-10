@@ -15,10 +15,13 @@ import {
   Minus,
   Search,
   Pencil,
+  GitBranch,
+  List,
 } from 'lucide-react';
 import { parser, type AstNode, type ParseResult } from './lib/parser';
 import { LanguageSelector } from './components/LanguageSelector';
 import { BottomSheet, type SnapPoint } from './components/BottomSheet';
+import { TreeView } from './components/TreeView';
 import { EditorView } from '@codemirror/view';
 import {
   cursorPositionTracker,
@@ -192,6 +195,7 @@ function App() {
   const [hoveredNodePath, setHoveredNodePath] = useState<string | null>(null);
   const [astSnap, setAstSnap] = useState<SnapPoint>('collapsed');
   const [editorMode, setEditorMode] = useState<EditorMode>('explorer');
+  const [treeViewEnabled, setTreeViewEnabled] = useState(false);
 
   const editorRef = useRef<ReactCodeMirrorRef>(null);
   const cursorDebounceRef = useRef<number | null>(null);
@@ -577,6 +581,19 @@ function App() {
 
     if (parseResult) {
       if (parseResult.success && parseResult.ast) {
+        if (treeViewEnabled) {
+          return (
+            <TreeView
+              ast={parseResult.ast}
+              expandedNodes={expandedNodes}
+              cursorNodePath={cursorNodePath}
+              hoveredNodePath={hoveredNodePath}
+              onToggleNode={toggleNode}
+              onNodeHover={handleNodeHover}
+              onNodeLeave={handleNodeLeave}
+            />
+          );
+        }
         return (
           <div className="font-mono text-sm">
             {renderAstNode(parseResult.ast, 'root')}
@@ -682,23 +699,51 @@ function App() {
                   </span>
                 )}
               </span>
-              {parseResult?.ast && (
-                <button
-                  onClick={toggleExpandCollapseAll}
-                  className="flex items-center justify-center w-7 h-7 rounded text-gray-500 active:bg-white/10 transition-colors"
-                  aria-label={isAllExpanded ? 'Collapse all' : 'Expand all'}
-                >
-                  {isAllExpanded ? (
-                    <FoldVertical className="w-3.5 h-3.5" />
-                  ) : (
-                    <UnfoldVertical className="w-3.5 h-3.5" />
-                  )}
-                </button>
-              )}
+              <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                {/* Tree View toggle (mobile) */}
+                <div className="flex items-center bg-white/[0.08] rounded-full p-[2px]">
+                  <button
+                    onClick={() => setTreeViewEnabled(false)}
+                    className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${
+                      !treeViewEnabled
+                        ? 'bg-[#007acc] text-white shadow-sm shadow-blue-500/30'
+                        : 'text-gray-500 active:bg-white/10'
+                    }`}
+                    aria-label="List view"
+                  >
+                    <List className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => setTreeViewEnabled(true)}
+                    className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${
+                      treeViewEnabled
+                        ? 'bg-[#007acc] text-white shadow-sm shadow-blue-500/30'
+                        : 'text-gray-500 active:bg-white/10'
+                    }`}
+                    aria-label="Tree view"
+                  >
+                    <GitBranch className="w-3 h-3" />
+                  </button>
+                </div>
+                {/* Expand/Collapse all (only in list view) */}
+                {parseResult?.ast && !treeViewEnabled && (
+                  <button
+                    onClick={toggleExpandCollapseAll}
+                    className="flex items-center justify-center w-7 h-7 rounded text-gray-500 active:bg-white/10 transition-colors"
+                    aria-label={isAllExpanded ? 'Collapse all' : 'Expand all'}
+                  >
+                    {isAllExpanded ? (
+                      <FoldVertical className="w-3.5 h-3.5" />
+                    ) : (
+                      <UnfoldVertical className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
           }
         >
-          <div className="flex-1 overflow-auto px-1 py-1 hide-scrollbar ast-tree">
+          <div className={`flex-1 ${treeViewEnabled ? 'relative overflow-hidden' : 'overflow-auto px-1 py-1 hide-scrollbar ast-tree'}`}>
             {renderAstContent()}
           </div>
         </BottomSheet>
@@ -788,27 +833,57 @@ function App() {
                 </span>
               )}
             </div>
-            {parseResult?.ast && (
-              <button
-                onClick={toggleExpandCollapseAll}
-                className="flex items-center gap-1.5 text-xs px-1.5 py-1 rounded hover:bg-white/10 transition-colors text-gray-500 hover:text-gray-400"
-                aria-label={isAllExpanded ? 'Collapse all nodes' : 'Expand all nodes'}
-              >
-                {isAllExpanded ? (
-                  <>
-                    <FoldVertical className="w-3.5 h-3.5" />
-                    <span>Collapse</span>
-                  </>
-                ) : (
-                  <>
-                    <UnfoldVertical className="w-3.5 h-3.5" />
-                    <span>Expand</span>
-                  </>
-                )}
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {/* Tree View toggle */}
+              <div className="flex items-center bg-white/[0.08] rounded-full p-[3px]">
+                <button
+                  onClick={() => setTreeViewEnabled(false)}
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-all ${
+                    !treeViewEnabled
+                      ? 'bg-[#007acc] text-white shadow-sm shadow-blue-500/30'
+                      : 'text-gray-500 hover:text-gray-300 hover:bg-white/10'
+                  }`}
+                  aria-label="List view"
+                >
+                  <List className="w-3 h-3" />
+                  <span>List</span>
+                </button>
+                <button
+                  onClick={() => setTreeViewEnabled(true)}
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-all ${
+                    treeViewEnabled
+                      ? 'bg-[#007acc] text-white shadow-sm shadow-blue-500/30'
+                      : 'text-gray-500 hover:text-gray-300 hover:bg-white/10'
+                  }`}
+                  aria-label="Tree view"
+                >
+                  <GitBranch className="w-3 h-3" />
+                  <span>Tree</span>
+                </button>
+              </div>
+              {/* Expand/Collapse all (only in list view) */}
+              {parseResult?.ast && !treeViewEnabled && (
+                <button
+                  onClick={toggleExpandCollapseAll}
+                  className="flex items-center gap-1.5 text-xs px-1.5 py-1 rounded hover:bg-white/10 transition-colors text-gray-500 hover:text-gray-400"
+                  aria-label={isAllExpanded ? 'Collapse all nodes' : 'Expand all nodes'}
+                >
+                  {isAllExpanded ? (
+                    <>
+                      <FoldVertical className="w-3.5 h-3.5" />
+                      <span>Collapse</span>
+                    </>
+                  ) : (
+                    <>
+                      <UnfoldVertical className="w-3.5 h-3.5" />
+                      <span>Expand</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
-          <div className="flex-1 overflow-auto px-2 py-1 ast-tree">
+          <div className={`flex-1 ${treeViewEnabled ? 'relative overflow-hidden' : 'overflow-auto px-2 py-1 ast-tree'}`}>
             {renderAstContent()}
           </div>
         </div>
