@@ -93,16 +93,6 @@ body {
   cursor: pointer;
 }
 
-/* Explorer mode hint auto-fade */
-.explorer-mode-hint {
-  animation: hintFadeIn 0.3s ease-out;
-}
-
-@keyframes hintFadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 /* CodeMirror mobile adjustments */
 @media (max-width: 768px) {
   .cm-editor {
