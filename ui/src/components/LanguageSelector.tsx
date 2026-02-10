@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { ChevronDown, X } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import {
     FileJson,
     Braces,
@@ -34,10 +33,8 @@ export function LanguageSelector({ value, onChange, isMobile }: LanguageSelector
 
     const selectedLanguage = LANGUAGES.find((lang) => lang.value === value);
 
-    // Close dropdown when clicking outside (desktop only)
+    // Close dropdown when clicking outside
     useEffect(() => {
-        if (isMobile) return;
-
         const handleClickOutside = (event: MouseEvent | TouchEvent) => {
             if (
                 dropdownRef.current &&
@@ -56,19 +53,19 @@ export function LanguageSelector({ value, onChange, isMobile }: LanguageSelector
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('touchstart', handleClickOutside);
         };
-    }, [isOpen, isMobile]);
+    }, [isOpen]);
 
     const handleSelect = (langValue: string) => {
         onChange(langValue);
         setIsOpen(false);
     };
 
-    // Mobile: full-screen bottom sheet style
+    // Mobile: regular dropdown (same pattern as desktop)
     if (isMobile) {
         return (
-            <>
+            <div className="relative" ref={dropdownRef}>
                 <button
-                    onClick={() => setIsOpen(true)}
+                    onClick={() => setIsOpen(!isOpen)}
                     className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-white/[0.08] border border-white/[0.1] rounded-full active:bg-white/15 transition-colors"
                 >
                     {selectedLanguage && (
@@ -77,62 +74,37 @@ export function LanguageSelector({ value, onChange, isMobile }: LanguageSelector
                             <span className="font-medium">{selectedLanguage.label}</span>
                         </>
                     )}
-                    <ChevronDown className="w-3 h-3 text-gray-400" />
+                    <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {isOpen && createPortal(
-                    <div className="lang-sheet-overlay" onClick={() => setIsOpen(false)}>
-                        <div
-                            className="lang-sheet"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {/* Handle bar */}
-                            <div className="flex justify-center pt-3 pb-1">
-                                <div className="w-10 h-1 rounded-full bg-white/20" />
-                            </div>
+                {isOpen && (
+                    <ul className="absolute right-0 mt-2 w-48 bg-[#252526] border border-white/20 rounded-lg shadow-lg z-50 overflow-hidden">
+                        {LANGUAGES.map((lang) => {
+                            const Icon = lang.icon;
+                            const isSelected = lang.value === value;
 
-                            {/* Header */}
-                            <div className="flex items-center justify-between px-5 py-3">
-                                <span className="text-base font-semibold text-white">Select Language</span>
-                                <button
-                                    onClick={() => setIsOpen(false)}
-                                    className="p-2 rounded-full bg-white/10 active:bg-white/20"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-
-                            {/* Language list */}
-                            <ul className="px-3 pb-6">
-                                {LANGUAGES.map((lang) => {
-                                    const Icon = lang.icon;
-                                    const isSelected = lang.value === value;
-
-                                    return (
-                                        <li key={lang.value}>
-                                            <button
-                                                onClick={() => handleSelect(lang.value)}
-                                                className={`w-full flex items-center gap-4 px-4 py-4 text-base rounded-xl transition-colors ${
-                                                    isSelected
-                                                        ? 'bg-blue-600/25 text-blue-300'
-                                                        : 'text-gray-200 active:bg-white/10'
-                                                }`}
-                                            >
-                                                <Icon className={`w-5 h-5 flex-shrink-0 ${isSelected ? 'text-blue-400' : 'text-gray-400'}`} />
-                                                <span className="font-medium">{lang.label}</span>
-                                                {isSelected && (
-                                                    <span className="ml-auto text-blue-400 text-lg">✓</span>
-                                                )}
-                                            </button>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </div>
-                    </div>,
-                    document.body
+                            return (
+                                <li key={lang.value}>
+                                    <button
+                                        onClick={() => handleSelect(lang.value)}
+                                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors ${
+                                            isSelected
+                                                ? 'bg-blue-600/25 text-blue-300'
+                                                : 'text-gray-200 active:bg-white/10'
+                                        }`}
+                                    >
+                                        <Icon className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-blue-400' : 'text-gray-400'}`} />
+                                        <span>{lang.label}</span>
+                                        {isSelected && (
+                                            <span className="ml-auto text-blue-400">✓</span>
+                                        )}
+                                    </button>
+                                </li>
+                            );
+                        })}
+                    </ul>
                 )}
-            </>
+            </div>
         );
     }
 

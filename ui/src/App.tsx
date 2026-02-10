@@ -666,9 +666,9 @@ function App() {
             style={{ height: '100%', fontSize: '14px' }}
           />
           {editorMode === 'explorer' && (
-            <div className="absolute bottom-3 left-3 right-3 flex justify-center pointer-events-none">
-              <div className="explorer-mode-hint flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-sm text-xs text-gray-300 border border-white/10">
-                <Search className="w-3 h-3" />
+            <div className="absolute bottom-16 left-3 right-3 flex justify-center pointer-events-none">
+              <div className="explorer-mode-hint flex items-center gap-2 px-4 py-2 rounded-full bg-black/70 backdrop-blur-sm text-sm text-gray-200 border border-white/15 shadow-lg">
+                <Search className="w-3.5 h-3.5" />
                 <span>Tap code to explore AST nodes</span>
               </div>
             </div>
