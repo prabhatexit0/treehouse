@@ -798,6 +798,8 @@ export function TreeView({
   allNodesRef.current = allNodes;
   const onToggleNodeRef = useRef(onToggleNode);
   onToggleNodeRef.current = onToggleNode;
+  const onNodeHoverRef = useRef(onNodeHover);
+  onNodeHoverRef.current = onNodeHover;
   const screenToWorldRef = useRef(screenToWorld);
   screenToWorldRef.current = screenToWorld;
   const getCanvasCoordsRef = useRef(getCanvasCoords);
@@ -884,8 +886,12 @@ export function TreeView({
         if (!dragRef.current.moved) {
           const world = screenToWorldRef.current(dragRef.current.startX, dragRef.current.startY);
           const hit = hitTest(allNodesRef.current, world.x, world.y);
-          if (hit && hit.node.children.length > 0) {
-            onToggleNodeRef.current(hit.id);
+          if (hit) {
+            // Highlight the tapped node in the source editor
+            onNodeHoverRef.current(hit.id);
+            if (hit.node.children.length > 0) {
+              onToggleNodeRef.current(hit.id);
+            }
           }
         }
         dragRef.current = null;
