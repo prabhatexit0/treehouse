@@ -93,16 +93,6 @@ body {
   cursor: pointer;
 }
 
-/* Explorer mode hint auto-fade */
-.explorer-mode-hint {
-  animation: hintFadeIn 0.3s ease-out;
-}
-
-@keyframes hintFadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 /* CodeMirror mobile adjustments */
 @media (max-width: 768px) {
   .cm-editor {
@@ -233,39 +223,3 @@ body {
   }
 }
 
-/* ============================================
-   Language Selector Bottom Sheet (mobile)
-   ============================================ */
-
-.lang-sheet-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: flex-end;
-  -webkit-tap-highlight-color: transparent;
-  animation: fadeIn 0.15s ease-out;
-}
-
-.lang-sheet {
-  width: 100%;
-  max-height: 70vh;
-  max-height: 70dvh;
-  background-color: #252526;
-  border-radius: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  overflow-y: auto;
-  padding-bottom: var(--safe-area-bottom);
-  animation: slideUp 0.25s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}

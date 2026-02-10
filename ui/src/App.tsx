@@ -603,7 +603,7 @@ function App() {
       <div className="h-full flex flex-col bg-[#1e1e1e] text-white">
         {/* Mobile header */}
         <div
-          className="mobile-header flex items-center justify-between px-4 py-2.5 border-b border-white/[0.06] bg-[#1e1e1e]/80 backdrop-blur-xl"
+          className="mobile-header flex items-center justify-between px-4 py-2.5 border-b border-white/[0.06] bg-[#1e1e1e] overflow-visible relative z-20"
           style={{ paddingTop: `max(10px, var(--safe-area-top))` }}
         >
           <span className="text-sm font-semibold text-white/90 tracking-tight">spectree</span>
@@ -665,14 +665,6 @@ function App() {
             }}
             style={{ height: '100%', fontSize: '14px' }}
           />
-          {editorMode === 'explorer' && (
-            <div className="absolute bottom-3 left-3 right-3 flex justify-center pointer-events-none">
-              <div className="explorer-mode-hint flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-sm text-xs text-gray-300 border border-white/10">
-                <Search className="w-3 h-3" />
-                <span>Tap code to explore AST nodes</span>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* AST Bottom Sheet */}
